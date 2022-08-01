@@ -10,7 +10,7 @@ from graphs.graph_battery import graph_battery
 from graphs.graph_free_fall import graph_free_fall
 from graphs.graph_gyro import graph_gyro
 from graphs.graph_pressure import graph_pressure
-from graphs.graph_speed import graph_speed, COLORS
+from graphs.graph_speed import graph_speed, COLOR
 from graphs.graph_temperature import graph_temperature
 from graphs.graph_time import graph_time
 from utils.socket_server import CarSocket
@@ -56,7 +56,9 @@ end_save_button.clicked.connect(data_base.stop)
 proxy2.setWidget(end_save_button)
 
 
-speed = graph_speed(data_names = ["speed"])
+speed = graph_speed(title="Spped/Brake")
+speed.add_axis("speed", COLOR.GREEN)
+speed.add_axis("brake", COLOR.RED)
                 
 Layout.nextRow()
 
@@ -72,7 +74,8 @@ l11 = l1.addLayout(rowspan=1, border=(83, 83, 83))
 
 l11.addItem(speed)
 
-speed.add_data(0)
+speed.add_data(0, axis="speed")
+speed.add_data(0, axis="brake")
 
 def update():
     try:
@@ -80,16 +83,18 @@ def update():
         if len(data_list):
             for data in data_list:
                 if data.direction == Direction.FORWARD:
-                    speed.add_data(data.speed, data.sent_time, axis="speed")
+                    speed.add_data(data.speed, axis="speed", sent_time=data.sent_time)
                 elif data.direction == Direction.BACKWARD:
-                    speed.add_data(-data.speed, data.sent_time, axis="speed")
+                    speed.add_data(-data.speed, axis="speed", sent_time=data.sent_time)
+                else:
+                    speed.add_data(data.speed, axis="brake", sent_time=data.sent_time)
         speed.update()
     except IndexError:
         print('starting, please wait a moment')
 
 timer = pg.QtCore.QTimer()
 timer.timeout.connect(update)
-timer.start(500)
+timer.start(30)
 
 if __name__ == '__main__':
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
