@@ -74,7 +74,6 @@ class Joystick:
                 message = JoystickData()
                 message.event_type = event.type
                 if event.type == self.__AXIS_EVENT:
-                  print("AXIS EVENT ", event)
                   message.axis = event.__dict__.get('axis')
                   message.value = event.__dict__.get('value')
 
