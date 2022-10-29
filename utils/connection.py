@@ -2,9 +2,9 @@ import socket
 import queue, threading
 from typing import List
 
-from utils.messages import DataMessage, deserialize_message
+from autonomousCarConnection.messages import DataMessage, JoystickData, deserialize_message, MessageType
 
-class CarSocketMeta(type):
+class ConnectionMeta(type):
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -13,46 +13,51 @@ class CarSocketMeta(type):
             cls._instances[cls] = instance
         return cls._instances[cls]
 
-class CarSocket(metaclass=CarSocketMeta):
+class Connection(metaclass=ConnectionMeta):
     def __init__(self) -> None:
-        self.__is_server = True
-        self.__localIP     = "192.168.0.53"
-        self.__localPort   = 5555
+        self.__IS_CLIENT = True
+        self.__CLIENT_ADDRESS = "192.168.0.53"
+        self.__CAR_ADDRESS = "192.168.0.115"
+        self.__LOCAL_PORT   = 5555
         self.__bufferSize  = 1024
         self.__UDPSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        self.__partner_address = self.__localIP
         self.__UDPSocket.settimeout(10)
         self.__isConnected = False
         self.__message_send_queue = queue.Queue()
         self.__message_recv_queue = queue.Queue()
 
+        if not self.__IS_CLIENT:
+            self.__UDPSocket.settimeout(10)
+
         self.__init_conection()
         
         if self.__isConnected:
-            if self.__is_server:
-                self.__socket_thread = threading.Thread(target=self.__recv, args=(), daemon=True)
-            else:
-                self.__socket_thread = threading.Thread(target=self.__send, args=(), daemon=True)
-            self.__socket_thread.start()
+            self.__recv_thread = threading.Thread(target=self.__recv, args=(), daemon=True)
+            self.__send_thread = threading.Thread(target=self.__send, args=(), daemon=True)
+            self.__recv_thread.start()
+            self.__send_thread.start()
 
     def __del__(self):
         if self.__isConnected:
+            self.__UDPSocket.close()
             self.__isConnected = False
-            self.__socket_thread.join()
+            self.__recv_thread.join()
+            self.__send_thread.join()
 
     def __init_conection(self):
         try:
-            if self.__is_server:
+            if self.__IS_CLIENT:
                 print("Waiting for client")
-                self.__UDPSocket.bind((self.__localIP, self.__localPort))
+                self.__UDPSocket.bind((self.__CLIENT_ADDRESS, self.__LOCAL_PORT))
                 bytesAddressPair = self.__UDPSocket.recvfrom(self.__bufferSize)
-                self.__partner_address = bytesAddressPair[1]
-                print("Connected to: ", self.__partner_address)
+                addr = bytesAddressPair[1]
+                print("Connected to: ", addr)
                 self.__isConnected = True
             else:
-                print("Seind Hello to :", (self.__partner_address, self.__localPort))
+                print("Sending Hello to :", (self.__CLIENT_ADDRESS, self.__LOCAL_PORT))
+                self.__UDPSocket.bind((self.__CAR_ADDRESS, self.__LOCAL_PORT))
                 bytesToSend = str.encode("Hello")
-                self.__UDPSocket.sendto(bytesToSend, (self.__partner_address, self.__localPort))
+                self.__UDPSocket.sendto(bytesToSend, (self.__CLIENT_ADDRESS, self.__LOCAL_PORT))
                 self.__isConnected = True
             self.__UDPSocket.settimeout(None)
         except socket.timeout as e:
@@ -74,7 +79,10 @@ class CarSocket(metaclass=CarSocketMeta):
         while self.__isConnected:
             message = self.__message_send_queue.get()
             bytesToSend = str.encode(message)
-            self.__UDPSocket.sendto(bytesToSend, (self.__partner_address, self.__localPort))
+            if self.__IS_CLIENT:
+                self.__UDPSocket.sendto(bytesToSend, (self.__CAR_ADDRESS, self.__LOCAL_PORT))
+            else:
+                self.__UDPSocket.sendto(bytesToSend, (self.__CLIENT_ADDRESS, self.__LOCAL_PORT))
     
     def __recv(self):
         while self.__isConnected:
