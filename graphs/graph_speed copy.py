@@ -65,7 +65,7 @@ class graph_speed(pg.PlotItem):
 
     def update_from_socket(self):
         while(True):
-            data : SpeedData = self.connection.incoming_speed_data.get()
+            data : SpeedData = self.connection.__incomingSpeedData.get()
             print(data.serialize())
             if data.direction == Direction.BACKWARD:
                 self.add_data(-data.speed, axis="speed")
@@ -82,7 +82,7 @@ class graph_speed(pg.PlotItem):
             time_axis = []
 
             for time_data in self.__time_axis[data_name]:
-                time_axis.append(time_data.passed_time)
+                time_axis.append(time_data.passedTime)
             
             value_axis = list(self.__value_axis[data_name])
             self.value_plot.get(data_name).setData(time_axis, value_axis)
@@ -123,7 +123,7 @@ class graph_speed(pg.PlotItem):
     def __clear_queue(self):
         for data_name in self.__data_names:
             if len(self.__time_axis[data_name]):
-                while (self.__time_axis[data_name][0].passed_time < self.time_expiration):
+                while (self.__time_axis[data_name][0].passedTime < self.time_expiration):
                     self.__time_axis[data_name].pop(0)
                     self.__value_axis[data_name].pop(0)
     

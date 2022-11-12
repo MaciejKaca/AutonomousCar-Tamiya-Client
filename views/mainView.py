@@ -1,9 +1,10 @@
 import sys
 from pyqtgraph.Qt import QtGui, QtWidgets
 import pyqtgraph as pg
-from graphs.graph_speed import SpeedGraph, COLOR
+from graphs.SpeedGraph import SpeedGraph
 from utils.connection import Connection
 from steamdeck_input import get_controller
+from utils.colors import Color
 
 class MainView():
     def __init__(self):
@@ -27,8 +28,8 @@ class MainView():
         self.setupGrapghs()
 
     def setupGrapghs(self):
-        self.speedGraph.add_axis("speed", COLOR.GREEN)
-        self.speedGraph.add_axis("brake", COLOR.RED)
+        self.speedGraph.add_axis("speed", Color.GREEN)
+        self.speedGraph.add_axis("brake", Color.RED)
         self.speedGraph.add_data(0, axis="speed")
         self.speedGraph.add_data(0, axis="brake")
         self.speedGraph.start_graph()

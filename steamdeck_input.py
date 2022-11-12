@@ -11,20 +11,23 @@ from autonomousCarConnection.messages import JoystickData
 pygame.init()
 pygame.joystick.init()
 
+
 def get_count():
-  return pygame.joystick.get_count()
+    return pygame.joystick.get_count()
+
 
 def get_controller(x):
-  count = pygame.joystick.get_count()
-  if count == 0:
-    print("no joysticks connected")
-    return None
-  elif x < count:
-    return Joystick(pygame.joystick.Joystick(x))
-  else:
-    print("Joystick " + str(x) + " not connected")
-    print("choose joystic from 0 to " + str(count -1))
-    return None  
+    count = pygame.joystick.get_count()
+    if count == 0:
+        print("no joysticks connected")
+        return None
+    elif x < count:
+        return Joystick(pygame.joystick.Joystick(x))
+    else:
+        print("Joystick " + str(x) + " not connected")
+        print("choose joystick from 0 to " + str(count - 1))
+        return None
+
 
 class Joystick:
     def __init__(self, controller):
@@ -40,7 +43,7 @@ class Joystick:
         self.__BUTTON_DOWN_EVENT = 1539
         self.__START_BUTTON = 7
 
-        self.__button_state = {self.__START_BUTTON : self.__BUTTON_UP}
+        self.__button_state = {self.__START_BUTTON: self.__BUTTON_UP}
 
         self.__event_queue = Queue()
 
@@ -53,7 +56,7 @@ class Joystick:
         self.__keepRunning = False
         self.__pad_thread.join()
 
-    def __handle_button(self, event : Event):
+    def __handle_button(self, event: Event):
         button = event.__dict__.get('button')
 
         if button == self.__START_BUTTON:
@@ -63,29 +66,30 @@ class Joystick:
 
     def was_exit_pressed(self) -> bool:
         self.__keepRunning_mutex.acquire()
-        tempValue = self.__keepRunning
+        temp_value = self.__keepRunning
         self.__keepRunning_mutex.release()
-        return not tempValue
+        return not temp_value
 
     def __handle_events(self):
         while not self.was_exit_pressed():
             for event in pygame.event.get():
-              if event.type == self.__AXIS_EVENT or event.type == self.__BUTTON_DOWN_EVENT or event.type == self.__BUTTON_UP_EVENT:
-                message = JoystickData()
-                message.event_type = event.type
-                if event.type == self.__AXIS_EVENT:
-                  message.axis = event.__dict__.get('axis')
-                  message.value = event.__dict__.get('value')
+                if event.type == self.__AXIS_EVENT or event.type == self.__BUTTON_DOWN_EVENT or \
+                        event.type == self.__BUTTON_UP_EVENT:
+                    message = JoystickData()
+                    message.event_type = event.type
+                    if event.type == self.__AXIS_EVENT:
+                        message.axis = event.__dict__.get('axis')
+                        message.value = event.__dict__.get('value')
 
-                if event.type != self.__AXIS_EVENT:
-                    button = event.__dict__.get('button')
-                    message.button = button
-                    isPressed = (event.type == self.__BUTTON_DOWN_EVENT)
-                    self.__button_state[button] = bool(isPressed)
-                    self.__handle_button(event)
-              
-                self.__socket.add_to_queue(message)
-            time.sleep(0.01) #10ms
+                    if event.type != self.__AXIS_EVENT:
+                        button = event.__dict__.get('button')
+                        message.button = button
+                        is_pressed = (event.type == self.__BUTTON_DOWN_EVENT)
+                        self.__button_state[button] = bool(is_pressed)
+                        self.__handle_button(event)
 
-    def add_event(self, message : JoystickData):
-      self.__event_queue.put(message)
+                    self.__socket.add_to_queue(message)
+            time.sleep(0.01)  # 10ms
+
+    def add_event(self, message: JoystickData):
+        self.__event_queue.put(message)
