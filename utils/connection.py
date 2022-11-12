@@ -71,19 +71,19 @@ class Connection(metaclass=ConnectionMeta):
             self.__handle_message(data)
 
     def __handle_message(self, message: DataMessage):
-        if message.message_type == MessageType.HEARTBEAT:
+        if message.messageType == MessageType.HEARTBEAT:
             heartbeat: Heartbeat = message
-            if heartbeat.system_id == self.__CAR_SYSTEM_ID:
+            if heartbeat.systemID.value == self.__CAR_SYSTEM_ID:
                 self.__heartbeatMutex.acquire()
                 self.__lastHeartbeatTime = self.__get_time()
                 self.__heartbeatMutex.release()
-        elif message.message_type == MessageType.SPEED:
+        elif message.messageType == MessageType.SPEED:
             self.__incomingSpeedData.put(message)
 
     def __send_heartbeat(self):
         while self.__keepRunning:
             heartbeat = Heartbeat()
-            heartbeat.system_id = self.__CLIENT_SYSTEM_ID
+            heartbeat.systemID.value = self.__CLIENT_SYSTEM_ID
             self.add_to_queue(heartbeat)
             time.sleep(self.__HEARTBEAT_HZ)
 

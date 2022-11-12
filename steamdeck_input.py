@@ -76,7 +76,7 @@ class Joystick:
                 if event.type == self.__AXIS_EVENT or event.type == self.__BUTTON_DOWN_EVENT or \
                         event.type == self.__BUTTON_UP_EVENT:
                     message = JoystickData()
-                    message.event_type = event.type
+                    message.eventType = event.type
                     if event.type == self.__AXIS_EVENT:
                         message.axis = event.__dict__.get('axis')
                         message.value = event.__dict__.get('value')

@@ -22,9 +22,10 @@ class SpeedGraph(BaseDataGraph):
     def __update_from_socket(self):
         while True:
             data: SpeedData = self._connection.get_speed_data()
-            if data.direction == Direction.BACKWARD:
-                self.add_data(value=-data.speed, axis="speed")
+            speed = data.speed.value
+            if data.direction.value == Direction.BACKWARD:
+                self.add_data(value=-speed, axis="speed")
             elif data.direction == Direction.FORWARD:
-                self.add_data(value=data.speed, axis="speed")
+                self.add_data(value=speed, axis="speed")
             elif data.direction == Direction.BRAKE:
-                self.add_data(value=data.speed, axis="brake")
+                self.add_data(value=speed, axis="brake")
