@@ -44,7 +44,7 @@ class DataGraph:
         self.__time_axis.append(self.__get_time() - sent_time)
         self.__value_axis.append(value)
         self.__data_mutex.release()
-    
+
     def __display_routine(self):
         while self.__keep_running:
             self.__data_mutex.acquire()

@@ -21,13 +21,13 @@ class Connection(metaclass=ConnectionMeta):
         self.__CLIENT_SYSTEM_ID = 222
         self.__HEARTBEAT_HZ = 1
         self.__UDPSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        self.__CLIENT_ADDRESS = "192.168.0.53"
+        self.__CLIENT_ADDRESS = "192.168.0.122"
         self.__CAR_ADDRESS = "192.168.0.115"
         self.__LOCAL_PORT   = 5555
         self.__bufferSize  = 1024
         self.__isConnected = False
         self.__message_send_queue = queue.Queue()
-        self.__message_recv_queue = queue.Queue()
+        self.incoming_speed_data = queue.Queue()
         self.__keep_running = True
         self.__last_hearbeat_time = 0
         self.__HEARTBEAT_TIMEOUT = 2000 # 2 seconds
@@ -46,23 +46,15 @@ class Connection(metaclass=ConnectionMeta):
         self.__monitor_hearbeat_thread.start()
 
     def __del__(self):
-        if self.__isConnected:
-            self.__UDPSocket.close()
-            self.__isConnected = False
-            self.__keep_running = False
-            self.__recv_thread.join()
-            self.__send_thread.join()
-            self.__hearbeat_thread.join()
+        self.__UDPSocket.close()
+        self.__isConnected = False
+        self.__keep_running = False
+        self.__recv_thread.join()
+        self.__send_thread.join()
+        self.__hearbeat_thread.join()
 
     def add_to_queue(self, message : DataMessage):
         self.__message_send_queue.put(message.serialize())
-    
-    def get_data(self) -> List[DataMessage]:
-        data_list = []
-        while not self.__message_recv_queue.empty():
-            data  = self.__message_recv_queue.get()
-            data_list.append(data)
-        return data_list
 
     def __send(self):
         while self.__keep_running:
@@ -70,13 +62,11 @@ class Connection(metaclass=ConnectionMeta):
             bytesToSend = str.encode(message)
             self.__UDPSocket.sendto(bytesToSend, (self.__CAR_ADDRESS, self.__LOCAL_PORT))
 
-    
     def __recv(self):
         while self.__keep_running:
             message = self.__UDPSocket.recvfrom(self.__bufferSize)
             data = deserialize_message(message[0])
             self.__handle_message(data)
-            self.__message_recv_queue.put(data)
 
     def __handle_message(self, message : DataMessage):
         if message.message_type == MessageType.HEARTBEAT:
@@ -85,6 +75,8 @@ class Connection(metaclass=ConnectionMeta):
                 self.__hearbeat_mutex.acquire
                 self.__last_hearbeat_time = self.__get_time()
                 self.__hearbeat_mutex.release
+        elif message.message_type == MessageType.SPEED:
+            self.incoming_speed_data.put(message)
 
     def __send_hearbeat(self):
         while self.__keep_running:
