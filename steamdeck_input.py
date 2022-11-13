@@ -76,14 +76,14 @@ class Joystick:
                 if event.type == self.__AXIS_EVENT or event.type == self.__BUTTON_DOWN_EVENT or \
                         event.type == self.__BUTTON_UP_EVENT:
                     message = JoystickData()
-                    message.eventType = event.type
+                    message.eventType.value = event.type
                     if event.type == self.__AXIS_EVENT:
-                        message.axis = event.__dict__.get('axis')
-                        message.value = event.__dict__.get('value')
+                        message.axis.value = event.__dict__.get('axis')
+                        message.inputValue.value = event.__dict__.get('value')
 
                     if event.type != self.__AXIS_EVENT:
                         button = event.__dict__.get('button')
-                        message.button = button
+                        message.button.value = button
                         is_pressed = (event.type == self.__BUTTON_DOWN_EVENT)
                         self.__button_state[button] = bool(is_pressed)
                         self.__handle_button(event)
