@@ -15,6 +15,11 @@ class SpeedGraph(BaseDataGraph):
 
         self.__updateFromSocketThread: Thread = Thread(target=self.__update_from_socket, args=(), daemon=True)
 
+        self.add_axis("speed", Color.GREEN)
+        self.add_axis("brake", Color.RED)
+        self.add_data(0, axis="speed")
+        self.add_data(0, axis="brake")
+
     def start_graph(self):
         super().start_graph()
         self.__updateFromSocketThread.start()

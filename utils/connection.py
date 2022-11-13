@@ -3,7 +3,8 @@ import socket
 import threading
 import time
 from threading import Lock
-from autonomousCarConnection.messages import DataMessage, Heartbeat, deserialize_message, MessageType, SpeedData
+from autonomousCarConnection.messages import DataMessage, Heartbeat, deserialize_message, MessageType, SpeedData, \
+    CurrentData
 
 
 class ConnectionMeta(type):
@@ -29,7 +30,8 @@ class Connection(metaclass=ConnectionMeta):
         self.__bufferSize = 1024
         self.__isConnected = False
         self.__messageSendQueue = queue.Queue()
-        self.__incomingSpeedData = queue.Queue()
+        self.__incomingSpeedGraphData = queue.Queue()
+        self.__incomingCurrentGraphData = queue.Queue()
         self.__keepRunning = True
         self.__lastHeartbeatTime = 0
         self.__HEARTBEAT_TIMEOUT = 2000  # 2 seconds
@@ -77,8 +79,12 @@ class Connection(metaclass=ConnectionMeta):
                 self.__heartbeatMutex.acquire()
                 self.__lastHeartbeatTime = self.__get_time()
                 self.__heartbeatMutex.release()
+
         elif message.messageType == MessageType.SPEED:
-            self.__incomingSpeedData.put(message)
+            self.__incomingSpeedGraphData.put(message)
+
+        elif message.messageType == MessageType.CURRENT:
+            self.__incomingCurrentGraphData.put(message)
 
     def __send_heartbeat(self):
         while self.__keepRunning:
@@ -112,4 +118,7 @@ class Connection(metaclass=ConnectionMeta):
         return is_connected
 
     def get_speed_data(self) -> SpeedData:
-        return self.__incomingSpeedData.get()
+        return self.__incomingSpeedGraphData.get()
+
+    def get_current_data(self) -> CurrentData:
+        return self.__incomingCurrentGraphData.get()
