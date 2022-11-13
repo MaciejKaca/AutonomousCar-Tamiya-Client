@@ -25,7 +25,7 @@ class SpeedGraph(BaseDataGraph):
             speed = data.speed.value
             if data.direction.value == Direction.BACKWARD:
                 self.add_data(value=-speed, axis="speed")
-            elif data.direction == Direction.FORWARD:
+            elif data.direction.value == Direction.FORWARD:
                 self.add_data(value=speed, axis="speed")
-            elif data.direction == Direction.BRAKE:
+            elif data.direction.value == Direction.BRAKE:
                 self.add_data(value=speed, axis="brake")
