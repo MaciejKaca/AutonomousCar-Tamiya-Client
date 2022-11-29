@@ -1,4 +1,4 @@
-from graphs.BaseDataGraph import *
+from graphs.base_data_graph import *
 from autonomousCarConnection.messages import CurrentData
 
 
@@ -20,6 +20,8 @@ class CurrentGraph(BaseDataGraph):
         self.add_data(0, axis="voltage")
         self.add_data(6.6, axis="minimum_voltage")
 
+        self.last_current = 0.0
+
     def start_graph(self):
         super().start_graph()
         self.__updateFromSocketThread.start()
@@ -29,3 +31,7 @@ class CurrentGraph(BaseDataGraph):
             data: CurrentData = self._connection.get_current_data()
             current = data.voltage.value
             self.add_data(value=current, axis="voltage")
+            self.last_current = current
+
+    def get_last_current(self):
+        return self.last_current

@@ -30,8 +30,6 @@ class Connection(metaclass=ConnectionMeta):
         self.__bufferSize = 1024
         self.__isConnected = False
         self.__messageSendQueue = queue.Queue()
-        self.__incomingSpeedGraphData = queue.Queue()
-        self.__incomingCurrentGraphData = queue.Queue()
         self.__keepRunning = True
         self.__lastHeartbeatTime = 0
         self.__HEARTBEAT_TIMEOUT = 2000  # 2 seconds
@@ -39,6 +37,10 @@ class Connection(metaclass=ConnectionMeta):
 
         self.__UDPSocket.bind((self.__CLIENT_ADDRESS, self.__LOCAL_PORT))
         self.__heartbeatMutex = Lock()
+
+        # Queues for widgets
+        self.__incomingSpeedGraphData = queue.Queue()
+        self.__incomingCurrentGraphData = queue.Queue()
 
         self.__receiveThread = threading.Thread(target=self.__receive, args=(), daemon=True)
         self.__sendThread = threading.Thread(target=self.__send, args=(), daemon=True)

@@ -1,4 +1,4 @@
-from graphs.BaseDataGraph import *
+from graphs.base_data_graph import *
 from autonomousCarConnection.messages import SpeedData, Direction
 
 
