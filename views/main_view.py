@@ -1,17 +1,13 @@
-import sys
-from PyQt5.QtWidgets import *
-from PyQt5 import QtCore
 from PyQt5.QtGui import *
 from PyQt5 import QtCore
 from PyQt5.QtCore import QTimer, QSize
 from PyQt5.QtGui import QFont, QPalette
-from PyQt5.QtWidgets import QLabel, QMainWindow, QApplication, QVBoxLayout, QWidget, QGridLayout, QHBoxLayout, \
-    QDesktopWidget, QFrame
-from pyqtgraph import GraphicsView, GraphicsLayout
-from pyqtgraph.Qt import QtGui, QtWidgets
+from PyQt5.QtWidgets import QLabel, QMainWindow, QVBoxLayout, QWidget, QHBoxLayout,QFrame
+from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg
 from graphs.speed_graph import SpeedGraph
 from graphs.current_graph import CurrentGraph
+from utils.camera_stream import CameraStream
 from utils.connection import Connection
 from steamdeck_input import get_controller
 
@@ -29,16 +25,14 @@ class MainView(QMainWindow):
 
         self.voltage = QLabel()
 
-        self.camera_view = QLabel(self)
-        self.CAMERA_WIDTH = 640
-        self.CAMERA_HEIGHT = 480
+        self.camera_stream = CameraStream()
 
         self.GRAPHS_PADDING = 40
         self.FONT_SIZE = 100
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_window)
-        self.timer.start(50)
+        self.timer.start(30)
 
         self.setup_layout()
         self.setup_graphs()
@@ -53,6 +47,7 @@ class MainView(QMainWindow):
         self.speedGraph.draw_graph()
         self.currentGraph.draw_graph()
         self.voltage.setText(str(self.currentGraph.get_last_current())[0:3] + "V")
+        self.camera_stream.draw()
 
     def set_graphs_size(self):
         size: QSize = self.graph_layout_widget.size()
@@ -97,12 +92,9 @@ class MainView(QMainWindow):
         main_layout.addLayout(graphs_layout)
 
         # Setup camera view
-        grey = QPixmap(self.CAMERA_WIDTH, self.CAMERA_HEIGHT)
-        grey.fill(QColor('darkGray'))
-        self.camera_view.setPixmap(grey)
         camera_layout = QHBoxLayout()
         camera_layout.addStretch()
-        camera_layout.addWidget(self.camera_view)
+        camera_layout.addWidget(self.camera_stream)
         camera_layout.addStretch()
         main_layout.addLayout(camera_layout)
 
@@ -113,7 +105,7 @@ class MainView(QMainWindow):
         self.setFixedHeight(800)
         self.changeSkinDark()
 
-        self.showFullScreen()
+        #self.showFullScreen()
 
     def changeSkinDark(self):
         darkpalette = QtGui.QPalette()

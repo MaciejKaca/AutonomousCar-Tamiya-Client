@@ -4,4 +4,5 @@ PyQt5-Qt5==5.15.2
 PyQt5-sip==12.10.1
 pyqtgraph==0.12.4
 pyserial==3.5
-pygame
+pygame~=2.1.2
+pyzmq~=24.0.1
